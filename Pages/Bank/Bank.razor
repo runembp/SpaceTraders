@@ -1,0 +1,52 @@
+@page "/bank"
+
+<h3>Bank</h3>
+
+<DataGrid TItem="AvailableLoan"
+          Data="_availableLoans"
+          RowSelectable="_ => false">
+    <DataGridColumns>
+        <DataGridColumn Field="@nameof(AvailableLoan.Type)" Caption="Type"/>
+        <DataGridColumn Field="@nameof(AvailableLoan.Amount)" Caption="Amount"/>
+        <DataGridColumn Field="@nameof(AvailableLoan.Rate)" Caption="Rate"/>
+        <DataGridColumn Field="@nameof(AvailableLoan.TermInDays)" Caption="Term (Days)"/>
+        <DataGridColumn Field="@nameof(AvailableLoan.CollateralRequired)" Caption="Collateral required"/>
+        <DataGridColumn>
+            <DisplayTemplate>
+                <Button Color="Color.Info" Clicked="() => OnAddLoanButton_Clicked(context.Type)">Add Loan</Button>
+            </DisplayTemplate>
+        </DataGridColumn>
+    </DataGridColumns>
+</DataGrid>
+
+<SpaceTradersSnackbar @ref="_snackbar" Color="_color" Message="@_snackBarMessage" />
+
+@code {
+    private SnackbarColor _color;
+    private string? _snackBarMessage;
+    private SpaceTradersSnackbar _snackbar = new();
+    
+    private List<AvailableLoan> _availableLoans = new();    
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _availableLoans = await BankService.AvailableLoans();
+    }
+
+    private async Task OnAddLoanButton_Clicked(string loanType)
+    {
+        var result = await BankService.AddLoan(loanType);
+
+        if (!result.Succeeded)
+        {
+            _snackBarMessage = result.Error;
+        }
+        else
+        {
+            _color = SnackbarColor.Success;
+            _snackBarMessage = "Loan added";
+        }
+
+        await _snackbar.Show();
+    }
+}

@@ -1,0 +1,21 @@
+<Snackbar @ref="_snackbar" Color="Color">
+    <SnackbarBody Flex="Flex.JustifyContent.Center">
+        @Message
+    </SnackbarBody>
+</Snackbar>
+
+@code {
+
+    [Parameter]
+    public SnackbarColor Color { get; set; }
+
+    [Parameter]
+    public string Message { get; set; } = string.Empty;
+    
+    private Snackbar _snackbar = new();
+
+    public async Task Show()
+    {
+        await _snackbar.Show();
+    }
+}

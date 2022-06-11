@@ -1,0 +1,24 @@
+﻿@using System.Net.Http
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.JSInterop
+
+@using SpaceTraders
+@using SpaceTraders.Shared
+@using SpaceTraders.Components
+
+@using Blazorise
+@using Blazorise.Extensions
+@using Blazorise.DataGrid
+@using Blazorise.DataGrid.Configuration
+@using Blazorise.Snackbar
+
+@inject NavigationManager NavigationManager
+@inject AccountService AccountService
+@inject ShipService ShipService
+@inject BankService BankService
+@inject LocationService LocationService

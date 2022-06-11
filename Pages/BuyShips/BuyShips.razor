@@ -1,0 +1,72 @@
+@page "/buy-ships"
+@using SpaceTraders.Data.DTO
+
+<h3>Current system: @CurrentSystem (@CurrentSystemSymbol)</h3>
+
+<DataGrid TItem="Ship"
+          Data="_systemShipList"
+          RowSelectable="_ => false"
+          Responsive
+          Virtualize
+          VirtualizeOptions="_virtualizeOptions">
+    <DataGridColumns>
+        <DataGridColumn Field="@nameof(Ship.Type)" Caption="Type" Sortable/>
+        <DataGridColumn Field="@nameof(Ship.Class)" Caption="Class" Sortable/>
+        <DataGridColumn Field="@nameof(Ship.MaxCargo)" Caption="MaxCargo" Sortable/>
+        <DataGridColumn Field="@nameof(Ship.Speed)" Caption="Speed" Sortable/>
+        <DataGridColumn Field="@nameof(Ship.Weapons)" Caption="Weapons" Sortable/>
+        <DataGridColumn Field="@nameof(Ship.Plating)" Caption="Plating" Sortable/>
+        <DataGridColumn Caption="Price">
+            <DisplayTemplate>
+                @context.GetLowestPrice()
+            </DisplayTemplate>
+        </DataGridColumn>
+        <DataGridColumn Caption="Location">
+            <DisplayTemplate>
+                @context.GetLowestPriceLocation()
+            </DisplayTemplate>
+        </DataGridColumn>
+        <DataGridColumn>
+            <DisplayTemplate>
+                <Button Color="Color.Primary" Size="Size.ExtraSmall" Clicked="() => OnBuyButton_Clicked(context)">Buy</Button>
+            </DisplayTemplate>
+        </DataGridColumn>
+    </DataGridColumns>
+</DataGrid>
+
+<SpaceTradersSnackbar @ref="_snackbar" Color="_snackbarColor" Message="@_snackbarMessage"/> 
+
+@code
+{
+    private const string CurrentSystem = "Omicron Eridani";
+    private const string CurrentSystemSymbol = "OE";
+    private List<Ship> _systemShipList = new();
+    private readonly VirtualizeOptions _virtualizeOptions = new() {DataGridMaxHeight = "1000px"};
+    
+    private SpaceTradersSnackbar _snackbar = new();
+    private SnackbarColor _snackbarColor;
+    private string? _snackbarMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _systemShipList = await ShipService.GetAvailableShipsForSystem(CurrentSystemSymbol);
+    }
+
+    private async Task OnBuyButton_Clicked(Ship ship)
+    {
+        var shipDto = new BuyShipDTO {Type = ship.Type, Location = ship.GetLowestPriceLocation()};
+        var response = await ShipService.BuyShip(shipDto);
+
+        if (!response.Succeeded)
+        {
+            _snackbarMessage = response.Error;
+        }
+        else
+        {
+            _snackbarColor = SnackbarColor.Success;
+            _snackbarMessage = "Ship has been bought!";
+        }
+
+        await _snackbar.Show();
+    }
+}

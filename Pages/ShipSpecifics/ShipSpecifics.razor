@@ -1,0 +1,89 @@
+@page "/ship/{ShipId}"
+@using SpaceTraders.Data.DTO
+
+<Row>
+    <Card ColumnSize="ColumnSize.Is5" Margin="Margin.Is3" Padding="Padding.Is3">
+        <SpaceTradersField Label="Id" Content="@ShipId"/>
+        <SpaceTradersField Label="Class" Content="@Ship.Class"/>
+        <SpaceTradersField Label="Max Cargo" Content="@Ship.MaxCargo.ToString()"/>
+        <SpaceTradersField Label="Space Available" Content="@Ship.SpaceAvailable.ToString()"/>
+    </Card>
+    <Card ColumnSize="ColumnSize.Is5" Margin="Margin.Is3" Padding="Padding.Is3">
+        <Label>
+            Buy Fuel
+        </Label>
+        <Row>
+            <Column ColumnSize="ColumnSize.Is8">
+                <NumericEdit TValue="int?" Value="_fuelValue" Disabled/>
+            </Column>
+            <Column Flex="Flex.JustifyContent.Center">
+                <Button Color="Color.Primary" Clicked="OnBuyFuelButton_Clicked">Buy</Button>
+            </Column>
+        </Row>
+        <Row>
+            <Column ColumnSize="ColumnSize.Is8" Margin="Margin.Is1.FromTop">
+                <Slider TValue="int?" Min="1" Max="@Ship.SpaceAvailable" Value="_fuelValue" ValueChanged="OnFuelSliderValue_Changed"/>
+            </Column>
+        </Row>
+    </Card>
+</Row>
+
+<Div>&nbsp;</Div>
+
+<Card ColumnSize="ColumnSize.Is5">
+    <DataGrid TItem="InventoryItem"
+              Data="@Ship.Cargo"
+              RowSelectable="_ => false">
+        <DataGridColumns>
+            <DataGridColumn Field="@nameof(InventoryItem.TotalVolume)" Caption="Volume"/>
+            <DataGridColumn Field="@nameof(InventoryItem.Quantity)" Caption="Quantity"/>
+            <DataGridColumn Field="@nameof(InventoryItem.Good)" Caption="Goods"/>
+        </DataGridColumns>        
+    </DataGrid>
+</Card>
+
+<SpaceTradersSnackbar @ref="@_snackbar" Color="_snackbarColor" Message="@_snackbarMessage"/>
+
+@code {
+
+    [Parameter]
+    public string? ShipId { get; set; }
+
+    private Ship Ship { get; set; } = new();
+
+    private int? _fuelValue = 0;
+
+    private SpaceTradersSnackbar _snackbar = new();
+    private SnackbarColor _snackbarColor;
+    private string _snackbarMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Ship = await AccountService.GetOwnedShip(ShipId);
+    }
+
+    private Task OnFuelSliderValue_Changed(int? newValue)
+    {
+        _fuelValue = newValue;
+        return Task.CompletedTask;
+    }
+
+    private async Task OnBuyFuelButton_Clicked()
+    {
+        var order = new BuyGoodDTO {ShipId = Ship.Id, Good = "FUEL", Quantity = _fuelValue};
+        var result = await AccountService.BuyFuelForShip(order);
+
+        if (!result.Succeeded)
+        {
+            _snackbarMessage = result.Error;
+        }
+        else
+        {
+            _snackbarColor = SnackbarColor.Success;
+            _snackbarMessage = "Fuel bought!";
+        }
+        
+        await _snackbar.Show();
+    }
+
+}

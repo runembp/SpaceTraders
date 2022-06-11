@@ -1,0 +1,60 @@
+﻿@page "/"
+
+
+<Field>
+    <FieldLabel>Username:</FieldLabel>
+    <FieldBody>@_user.Username</FieldBody>
+</Field>
+
+<Field>
+    <FieldLabel>Credits:</FieldLabel>
+    <FieldBody TextWeight="TextWeight.Bold">@_user.Credits</FieldBody>
+</Field>
+
+<Field>
+    <FieldLabel>Ship count:</FieldLabel>
+    <FieldBody>@_user.ShipCount</FieldBody>
+</Field>
+
+<Field>
+    <FieldLabel>Structure count:</FieldLabel>
+    <FieldBody>@_user.StructureCount</FieldBody>
+</Field>
+
+<Field>
+    <FieldLabel>Joined at:</FieldLabel>
+    <FieldBody>@_user.JoinedAt</FieldBody>
+</Field>
+
+@if (!_ownedShips.IsNullOrEmpty())
+{
+    <DataGrid TItem="Ship"
+              Data="_ownedShips"
+              RowSelectable="_ => false">
+        <DataGridColumns>
+            <DataGridColumn Field="@nameof(Ship.Type)" Caption="Type">
+                <DisplayTemplate>
+                    <Button Color="Color.Link" Clicked="() => OnShipIdButton_Clicked(context.Id)">@context.Type</Button>
+                </DisplayTemplate>
+            </DataGridColumn>
+        </DataGridColumns>
+    </DataGrid>
+}
+
+@code
+{
+    private User _user = new();
+    private List<Ship> _ownedShips = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _user = await AccountService.GetUser();
+        _ownedShips = await AccountService.GetOwnedShips();
+    }
+
+    private Task OnShipIdButton_Clicked(string shipId)
+    {
+        NavigationManager.NavigateTo($"/ship/{shipId}");
+        return Task.CompletedTask;
+    }
+}

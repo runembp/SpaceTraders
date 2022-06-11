@@ -1,0 +1,28 @@
+@page "/ship-catalogue"
+
+<DataGrid TItem="Ship"
+          Data="_shipList"
+          RowSelectable="_ => false"
+          Responsive
+          Virtualize
+          VirtualizeOptions="_virtualizeOptions">
+    <DataGridColumns>
+        <DataGridColumn Field="@nameof(Ship.Type)" Caption="Type"/>
+        <DataGridColumn Field="@nameof(Ship.Class)" Caption="Class"/>
+        <DataGridColumn Field="@nameof(Ship.Manufacturer)" Caption="Manufacturer"/>
+        <DataGridColumn Field="@nameof(Ship.MaxCargo)" Caption="Max Cargo"/>
+        <DataGridColumn Field="@nameof(Ship.Plating)" Caption="Plating"/>
+        <DataGridColumn Field="@nameof(Ship.Weapons)" Caption="Weapons"/>
+    </DataGridColumns>
+</DataGrid>
+
+@code {
+    private List<Ship>? _shipList = new();
+    private readonly VirtualizeOptions _virtualizeOptions = new () {DataGridHeight = "800px", DataGridMaxHeight = "800px"};
+
+    protected override async Task OnInitializedAsync()
+    {
+        _shipList = await ShipService.GetShipCatalogue();
+    }
+
+}
