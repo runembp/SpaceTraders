@@ -16,6 +16,7 @@ builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<ShipService>();
 builder.Services.AddScoped<BankService>();
 builder.Services.AddScoped<LocationService>();
+builder.Services.AddScoped<MarketService>();
 
 var app = builder.Build();
 

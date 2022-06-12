@@ -1,27 +1,28 @@
 @page "/marketplace"
 
 <Column ColumnSize="ColumnSize.Is3">
-    <Select TValue="Location" SelectedValue="_selectedLocation" SelectedValueChanged="OnLocationValue_Changed">
+    <Select TValue="string" SelectedValue="@_selectedLocation" SelectedValueChanged="OnLocationValue_Changed">
         @foreach (var location in _systemLocations)
         {
-            <SelectItem Value="@location.Name">@location.Name</SelectItem>
+            <SelectItem Value="@location">@location.Name</SelectItem>
         }
     </Select>
 </Column>
 
+<Paragraph></Paragraph>
+
 @code {
     private List<Location> _systemLocations = new();
-    private Location _selectedLocation = new();
+    private string _selectedLocation = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         _systemLocations = await LocationService.GetSystemLocations();
-        _selectedLocation = _systemLocations.First();
+        _selectedLocation = _systemLocations.First().Symbol;
     }
 
     private void OnLocationValue_Changed()
     {
-        Console.WriteLine($"Location changed to {_selectedLocation.Name}");
+        Console.WriteLine($"Location changed to {_selectedLocation}");
     }
-
 }

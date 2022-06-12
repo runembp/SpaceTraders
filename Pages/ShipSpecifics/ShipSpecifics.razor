@@ -1,5 +1,4 @@
 @page "/ship/{ShipId}"
-@using SpaceTraders.Data.DTO
 
 <Row>
     <Card ColumnSize="ColumnSize.Is5" Margin="Margin.Is3" Padding="Padding.Is3">
@@ -9,25 +8,43 @@
         <SpaceTradersField Label="Space Available" Content="@Ship.SpaceAvailable.ToString()"/>
     </Card>
     <Card ColumnSize="ColumnSize.Is5" Margin="Margin.Is3" Padding="Padding.Is3">
-        <Label>
-            Buy Fuel
-        </Label>
-        <Row>
-            <Column ColumnSize="ColumnSize.Is8">
-                <NumericEdit TValue="int?" Value="_fuelValue" Disabled/>
-            </Column>
-            <Column Flex="Flex.JustifyContent.Center">
-                <Button Color="Color.Primary" Clicked="OnBuyFuelButton_Clicked">Buy</Button>
-            </Column>
-        </Row>
-        <Row>
-            <Column ColumnSize="ColumnSize.Is8" Margin="Margin.Is1.FromTop">
-                <Slider TValue="int?" Min="1" Max="@Ship.SpaceAvailable" Value="_fuelValue" ValueChanged="OnFuelSliderValue_Changed"/>
-            </Column>
-        </Row>
+        <Select TValue="string" SelectedValueChanged="OnAvailableGoodsValue_Changed">
+            @foreach (var good in _availableGoods)
+            {
+                <SelectItem Value="good.Symbol">@good.Name</SelectItem>
+            }
+        </Select>
+
+        <Div>
+            <Label>
+                Buy @_selectedGood.Name
+            </Label>
+            <Row>
+                <Column>
+                    <FieldLabel>
+                        Volume per Unit
+                    </FieldLabel>
+                    <NumericEdit TValue="int?" Value="@_selectedGood.VolumePerUnit" Disabled/>
+                </Column>
+            </Row>
+            <Row>
+                <Column ColumnSize="ColumnSize.Is8">
+                    <NumericEdit TValue="int?" Value="_goodValue" Disabled/>
+                </Column>
+                <Column Flex="Flex.JustifyContent.Center">
+                    <Button Color="Color.Primary" Clicked="OnGoodBuyButton_Clicked">Buy</Button>
+                </Column>
+            </Row>
+            <Row>
+                <Column ColumnSize="ColumnSize.Is8" Margin="Margin.Is1.FromTop">
+                    <Slider TValue="int?" Step="@_selectedGood.VolumePerUnit" Min="@_selectedGood.VolumePerUnit" Max="@Ship.SpaceAvailable" Value="_goodValue" ValueChanged="OnGoodSliderValue_Changed"/>
+                </Column>
+            </Row>
+        </Div>
+
+
     </Card>
 </Row>
-
 <Div>&nbsp;</Div>
 
 <Card ColumnSize="ColumnSize.Is5">
@@ -38,7 +55,7 @@
             <DataGridColumn Field="@nameof(InventoryItem.TotalVolume)" Caption="Volume"/>
             <DataGridColumn Field="@nameof(InventoryItem.Quantity)" Caption="Quantity"/>
             <DataGridColumn Field="@nameof(InventoryItem.Good)" Caption="Goods"/>
-        </DataGridColumns>        
+        </DataGridColumns>
     </DataGrid>
 </Card>
 
@@ -50,8 +67,10 @@
     public string? ShipId { get; set; }
 
     private Ship Ship { get; set; } = new();
+    private List<Good> _availableGoods = new();
+    private Good _selectedGood = new();
 
-    private int? _fuelValue = 0;
+    private int? _goodValue = 0;
 
     private SpaceTradersSnackbar _snackbar = new();
     private SnackbarColor _snackbarColor;
@@ -60,17 +79,18 @@
     protected override async Task OnInitializedAsync()
     {
         Ship = await AccountService.GetOwnedShip(ShipId);
+        _availableGoods = await MarketService.GetAvailableGoods();
     }
 
-    private Task OnFuelSliderValue_Changed(int? newValue)
+    private Task OnGoodSliderValue_Changed(int? newValue)
     {
-        _fuelValue = newValue;
+        _goodValue = newValue;
         return Task.CompletedTask;
     }
 
-    private async Task OnBuyFuelButton_Clicked()
+    private async Task OnGoodBuyButton_Clicked()
     {
-        var order = new BuyGoodDTO {ShipId = Ship.Id, Good = "FUEL", Quantity = _fuelValue};
+        var order = new BuyGoodDTO {ShipId = Ship.Id, Good = "FUEL", Quantity = _goodValue};
         var result = await AccountService.BuyFuelForShip(order);
 
         if (!result.Succeeded)
@@ -82,8 +102,13 @@
             _snackbarColor = SnackbarColor.Success;
             _snackbarMessage = "Fuel bought!";
         }
-        
+
         await _snackbar.Show();
+    }
+
+    private void OnAvailableGoodsValue_Changed(string symbol)
+    {
+        _selectedGood = _availableGoods.FirstOrDefault(g => g.Symbol == symbol) ?? new Good();
     }
 
 }
